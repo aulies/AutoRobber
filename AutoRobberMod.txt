@@ -1,0 +1,36 @@
+import asyncio
+import random
+from .. import loader
+
+@loader.tds
+class AutoRobberMod(loader.Module):
+    """спиздил"""
+
+    strings = {"name": "AutoRobber"}
+
+    async def client_ready(self, client, db):
+        self.client = client
+        self.db = db
+        self.active = False
+
+    async def startrobbingcmd(self, message):
+        """Запустить авто-ограбление раз в 60 минут"""
+        self.active = True
+        await message.edit("<b>Авто-ограбление запущено!</b>")
+
+        while self.active:
+            msgs = [
+                msg async for msg in self.client.iter_messages(message.chat_id, limit=50) 
+                if msg.sender_id != message.sender_id and not msg.out and not (await self.client.get_entity(msg.sender_id)).bot
+            ]
+
+            if msgs:
+                victim = random.choice(msgs)
+                await victim.reply("ограбить игрока")
+
+            await asyncio.sleep(60 * 60)
+
+    async def stoprobbingcmd(self, message):
+        """Остановить авто-ограбление"""
+        self.active = False
+        await message.edit("<b>Авто-ограбление остановлено!</b>")
